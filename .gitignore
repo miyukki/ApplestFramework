@@ -1,0 +1,16 @@
+# Own Configurations
+Config.php
+Config.development.php
+Config.test.php
+Config.staging.php
+Config.production.php
+
+# Own Route
+Route.php
+
+# Own Environment
+environment/*
+
+# Own Tests
+Test.php
+test.php
