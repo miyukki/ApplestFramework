@@ -237,12 +237,4 @@ class ApplestFramework {
 			$after_action->exec();
 		}
 	}
-	
-	// private function getSmartyObject() {
-	// 	require_once($this->getConfig('SMARTY', 'PATH'));
-	// 	$smarty = new Smarty();
-	// 	$smarty->template_dir = $this->getConfig('SMARTY', 'TEMPLATE_DIR');
-	// 	$smarty->compile_dir  = $this->getConfig('SMARTY', 'TEMPLATE_COMPILED_DIR');
-	// 	return $smarty;
-	// }
 }
