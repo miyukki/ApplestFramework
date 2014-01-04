@@ -47,6 +47,8 @@ class Log {
 	}
 
 	public static function finalize() {
+		if(count(self::$logs) === 0) return;
+		
 		$log_str = '';
 		foreach (self::$logs as $log) {
 			$log_str .= $log.PHP_EOL;
