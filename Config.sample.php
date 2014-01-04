@@ -12,5 +12,6 @@ return array(
 		'public'     => dirname(__FILE__).'/public',
 		'vendor'     => dirname(__FILE__).'/vendor',
 		'controller' => dirname(__FILE__).'/controller',
+		'log'        => dirname(__FILE__).'/log',
 	),
 );

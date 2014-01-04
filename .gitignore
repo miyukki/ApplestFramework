@@ -11,6 +11,9 @@ Route.php
 # Own Environment
 environment/*
 
+# Own Log
+log/*
+
 # Own Tests
 Test.php
 test.php
