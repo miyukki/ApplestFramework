@@ -44,6 +44,8 @@ require(BASE_DIR.'/core/Environment.class.php');
 require(BASE_DIR.'/core/Logic.class.php');
 require(BASE_DIR.'/core/Controller.class.php');
 require(BASE_DIR.'/core/Log.class.php');
+require(BASE_DIR.'/core/Test.class.php');
+require(BASE_DIR.'/core/Console.class.php');
 
 switch (Environment::get()) {
 	case Environment::PRODUCTION:
