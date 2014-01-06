@@ -4,8 +4,12 @@ class View {
 	private static $buffer = '';
 	private static $mode = 'plain';
 
-	public static function show($file_name, $data) {
-		if(!$data) $data = array();
+	public static function show($file_name, $data = null) {
+		Log::warn('DEPRECATED: View::show() is deprecated, should use View::template().');
+		self::template($file_name, $data);
+	}
+	public static function template($file_name, $data = null) {
+		if(is_null($data)) $data = array();
 		$clean_room = function($__file_name, array $__data, &$__buffer) {
 			extract($__data, EXTR_REFS);
 
