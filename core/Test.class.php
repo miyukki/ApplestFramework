@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Unit test core class.
+ * This test class is inspired by lime of Symfony of a PHP framework.
+ *
+ * @package    ApplestFramework
+ * @author     Yusei Yamanaka<info@applest.net>
+ * @version    $id$
+ */
 class Test {
 	private static $count = 1;
 
