@@ -5,7 +5,7 @@ cp test/Config.php Config.php
 
 # MySQL initializations
 mysql -e 'CREATE DATABASE travis_test'
-mysql -e 'CREATE TABLE `users` (\
+mysql travis_test -e 'CREATE TABLE `users` (\
  `id` bigint(20) NOT NULL AUTO_INCREMENT,\
  `created_at` bigint(20) NOT NULL,\
  `updated_at` bigint(20) NOT NULL,\
