@@ -19,7 +19,7 @@ DirectoryIndex index.html index.php
 		</IfModule>
 
 		# for Apache FGCI installations
-		<IfModule !mod_php5.c>a
+		<IfModule !mod_php5.c>
 			RewriteRule ^(.*)$ index.php?/$1 [QSA,L]
 		</IfModule>
 
