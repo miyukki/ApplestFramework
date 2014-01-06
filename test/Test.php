@@ -3,7 +3,6 @@ require(dirname(__FILE__).'/../Core.php');
 
 class TestController extends Controller {
 	public function exec() {
-
 		// Model
 		$user1 = UserModel::create();
 		$user1->name = 'Jane';
@@ -13,12 +12,10 @@ class TestController extends Controller {
 		$user2->name = 'Mike';
 		$user2_id = $user2->save();
 
-		if(UserModel::find_by_id($user1_id)->name !== 'Jane') {
-			echo 'Endpoint 1';
-			exit(1);
-		}
-		if(UserModel::find_by_id($user2_id)->name !== 'Mike') {
-			echo 'Endpoint 2';
+		Test::is(UserModel::find_by_id($user1_id)->name, 'Jane', 'Find a user test 1');
+		Test::is(UserModel::find_by_id($user2_id)->name, 'Mike', 'Find a user test 2');
+
+		if(Test::is_fail()) {
 			exit(1);
 		}
 	}
