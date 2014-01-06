@@ -1,7 +1,7 @@
 <?php
 
 return array(
-	'debug'   => false,
+	'debug'   => true,
 
 	'salt'    => 'tRaV!S_C1',
 
