@@ -1,4 +1,6 @@
 language: php
+services:
+  - redis-server
 phps:
   - 5.3
   - 5.4
