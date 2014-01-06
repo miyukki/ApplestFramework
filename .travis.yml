@@ -1,0 +1,9 @@
+language: php
+phps:
+  - 5.3
+  - 5.4
+  - 5.5
+before_script:
+  - mysql -e 'CREATE DATABASE travis_test;'
+script:
+  - sh .travis.sh
