@@ -22,48 +22,12 @@ define('BASE_DIR', dirname(__FILE__));
 define('ROUTE_FILE', BASE_DIR.'/Route.php');
 define('ENVIRONMENT_DIR', BASE_DIR.'/environment');
 
-require(BASE_DIR.'/core/View.class.php');
-require(BASE_DIR.'/core/Event.class.php');
-require(BASE_DIR.'/core/Vendor.class.php');
-require(BASE_DIR.'/core/Redis.class.php');
-require(BASE_DIR.'/core/Session.class.php');
-require(BASE_DIR.'/core/Hash.class.php');
-require(BASE_DIR.'/core/Validation.class.php');
-require(BASE_DIR.'/core/Validator.class.php');
-require(BASE_DIR.'/core/Model.class.php');
-require(BASE_DIR.'/core/Type.class.php');
-require(BASE_DIR.'/core/MySQL.class.php');
-require(BASE_DIR.'/core/Util.class.php');
-require(BASE_DIR.'/core/Input.class.php');
-require(BASE_DIR.'/core/Response.class.php');
-require(BASE_DIR.'/core/Cookie.class.php');
-require(BASE_DIR.'/core/Config.class.php');
-require(BASE_DIR.'/core/Route.class.php');
-require(BASE_DIR.'/core/Router.class.php');
-require(BASE_DIR.'/core/Environment.class.php');
-require(BASE_DIR.'/core/Logic.class.php');
-require(BASE_DIR.'/core/Controller.class.php');
-require(BASE_DIR.'/core/Log.class.php');
-require(BASE_DIR.'/core/Test.class.php');
-require(BASE_DIR.'/core/Console.class.php');
-
-switch (Environment::get()) {
-	case Environment::PRODUCTION:
-		define('CONFIG_FILE', BASE_DIR.'/Config.production.php');
-		break;
-	case Environment::TEST:
-		define('CONFIG_FILE', BASE_DIR.'/Config.test.php');
-		break;
-	case Environment::STAGING:
-		define('CONFIG_FILE', BASE_DIR.'/Config.staging.php');
-		break;
-	case Environment::DEVELOPMENT:
-		define('CONFIG_FILE', BASE_DIR.'/Config.development.php');
-		break;
-	case Environment::NONE:
-		define('CONFIG_FILE', BASE_DIR.'/Config.php');
-		break;
+$core_classes = array('View', 'Event', 'Vendor', 'Redis', 'Session', 'Hash', 'Validation', 'Validator', 'Model', 'Type', 'MySQL', 'Util', 'Input', 'Response', 'Cookie', 'Config', 'Route', 'Router', 'Environment', 'Logic', 'Controller', 'Log', 'Test', 'Console');
+foreach ($core_classes as $class) {
+	require(BASE_DIR.'/core/'.$class.'.class.php');
 }
+
+
 
 /**
  * Run the action in the controller.
@@ -112,8 +76,31 @@ class ApplestFramework {
 	public function __construct() {
 		mb_internal_encoding('utf-8');
 		spl_autoload_register('ApplestFramework::autoloader', true, true);
-		// var_dump(date_default_timezone_get());
-		date_default_timezone_set('Asia/Tokyo');
+
+		// タイムゾーン未設定に対応
+		if(!ini_get('date.timezone')) {
+			Log::warn('タイムゾーンの設定が行われていません。今すぐにタイムゾーンの設定をphp.iniに書き込むべきです！');
+			Log::warn('There is not system\'s timezone settings. You shohuld write timezone on php.ini so quickly.');
+			date_default_timezone_set(@date_default_timezone_get());
+		}
+
+		switch (Environment::get()) {
+			case Environment::PRODUCTION:
+				define('CONFIG_FILE', BASE_DIR.'/Config.production.php');
+				break;
+			case Environment::TEST:
+				define('CONFIG_FILE', BASE_DIR.'/Config.test.php');
+				break;
+			case Environment::STAGING:
+				define('CONFIG_FILE', BASE_DIR.'/Config.staging.php');
+				break;
+			case Environment::DEVELOPMENT:
+				define('CONFIG_FILE', BASE_DIR.'/Config.development.php');
+				break;
+			case Environment::NONE:
+				define('CONFIG_FILE', BASE_DIR.'/Config.php');
+				break;
+		}
 
 		// デバッグ設定
 		if(Config::get('debug', false)) {
@@ -121,14 +108,7 @@ class ApplestFramework {
 			ini_set('display_errors', 1);
 		}else{
 			error_reporting(0);
-		}
-
-		if(in_array('session', Config::get('use'))) {
-			// $session_path = Config::get('session.path');
-			// if(!$session_path) {
-			// 	throw new Exception('No Define Session Path!');
-			// }
-			// Session::setPath($session_path);
+			ini_set('display_errors', 0);
 		}
 
 		// URL正規化
@@ -149,10 +129,18 @@ class ApplestFramework {
 			$db = MySQL::getInstance();
 			$db->connect(sprintf('mysql:dbname=%s;host=%s', Config::get('mysql.name'), Config::get('mysql.host')), Config::get('mysql.user'), Config::get('mysql.password'));
 		}
+
+		if(in_array('session', Config::get('use'))) {
+			// $session_path = Config::get('session.path');
+			// if(!$session_path) {
+			// 	throw new Exception('No Define Session Path!');
+			// }
+			// Session::setPath($session_path);
+		}
 	}
 	public function dispatchAction($controller_name  = null) {
 		try {
-			$this->dispatchAction2($controller_name);
+			$this->dispatchActionThrowableException($controller_name);
 		} catch (Exception $e) {
 			if(Config::get('debug', false)) {
 				throw $e;
@@ -162,7 +150,7 @@ class ApplestFramework {
 		}
 	}
 
-	private function dispatchAction2($controller_name) {
+	private function dispatchActionThrowableException($controller_name) {
 		if(!is_null($controller_name)) {
 			$route = Route::run($controller_name.'#exec');
 			$this->run($route);
