@@ -1,9 +1,12 @@
 language: php
-services:
-  - redis-server
-phps:
+
+php:
   - 5.3
   - 5.4
   - 5.5
+
+services:
+  - redis-server
+
 script:
   - sh .travis.sh
