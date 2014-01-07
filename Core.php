@@ -131,6 +131,19 @@ class ApplestFramework {
 			// Session::setPath($session_path);
 		}
 
+		// URL正規化
+		$base_url = Config::get('base_url');
+		if(!is_null($base_url)) {
+			// 現在のURL(ベース部分)を取得
+			$real_base_url = (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off' ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
+
+			// もしbase_urlと異なる場合はリダイレクト
+			if($base_url !== $real_base_url) {
+				Response::redirect($_SERVER['REQUEST_URI']);
+				exit;
+			}
+		}
+
 		// MySQL使用
 		if(in_array('mysql', Config::get('use'))) {
 			$db = MySQL::getInstance();
