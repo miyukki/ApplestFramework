@@ -23,7 +23,6 @@ class Log {
 
 	public static function dump($object) {
 		ob_start();
-		var_dump($object);
 		$dump_str = ob_get_contents();
 		ob_end_clean();
 		self::write($dump_str);
