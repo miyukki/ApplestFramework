@@ -30,7 +30,7 @@ class Input {
     }
 	public static function put($key = null, $default = null) {
 		static::$put_param === null and static::hydrate();
-		var_dump(static::$put_param);
+		// var_dump(static::$put_param);
 		if(isset($put_param[$key])) {
 			return $put_param[$key];
 		}
@@ -122,7 +122,33 @@ class Input {
 		return $default;
 	}
 	public static function path() {
-		return getenv('PATH_INFO');
+
+		// PATH_INFO環境変数がある場合(index.php/foobarを参照)
+		$path_info = getenv('PATH_INFO');
+
+		// PATH_INFO環境変数がない場合(index.php?/foobarを参照)
+		if(!$path_info)
+		{
+			$queries = explode('&', $_SERVER['QUERY_STRING']);
+			foreach ($queries as $query)
+			{
+				if(strpos($query, '/') === 0)
+				{
+					$path_info = $query;
+					break;
+				}
+			}
+		}
+
+		// それでも設定できない場合
+		if(!$path_info)
+		{
+			Log::warn('パスが自動で判別できませんでした。');
+			Log::warn('Cannot auto detected virtual path.');
+			$path_info = '/';
+		}
+		
+		return $path_info;
 	}
 	public static function method() {
 		if(defined('STDIN')) return 'CLI';
