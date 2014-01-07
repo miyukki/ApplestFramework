@@ -33,11 +33,11 @@ class Log {
 		self::write('INFO', $log_text);
 	}
 
-	public static function warn() {
+	public static function warn($log_text) {
 		self::write('WARN', $log_text);
 	}
 
-	public static function error() {
+	public static function error($log_text) {
 		self::write('ERROR', $log_text);
 	}
 
