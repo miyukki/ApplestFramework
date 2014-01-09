@@ -20,4 +20,4 @@ RESULT=$?
 
 cat log/*
 
-exit RESULT
+exit $RESULT
