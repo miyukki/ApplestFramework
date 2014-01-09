@@ -20,8 +20,15 @@ class Util {
 		if($length < 0) return FALSE;
 		return strpos($haystack, $needle, $length) !== FALSE;
 	}
+
+	public static function convert_snake_case($value)
+	{
+		$value = strtolower(preg_replace('/([a-z])([A-Z])/', "$1_$2", $value));
+		return $value;
+	}
+
 	public static function tableize($model_name) {
-		$name = strtolower(preg_replace('/([a-z])([A-Z])/', "$1_$2", $model_name));
+		$name = self::convert_snake_case($model_name);
 		$names = explode('_', $name);
 		$names[count($names)-1] = self::pluralize($names[count($names)-1]);
 		$name = implode('_', $names);

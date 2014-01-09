@@ -20,6 +20,7 @@ class Type {
 	protected $_enable_hibernate = true;
 
 	protected $_properties = array();
+
 	private $_default_properties = array(
 		'id' => array(
 			'type' => 'int',
@@ -46,31 +47,38 @@ class Type {
 			$this->_data = $data;
 		}
 	}
+
+	public function setName($name) {
+		$this->_name = $name;
+	}
+
 	/**
 	 * __setオーバーロード
 	 * データにキーと値を代入,その際に正規性を確認
 	 */
 	public function __set($key, $value) {
-				$this->_data[$key] = $value;
-				return;
-		if(array_key_exists($key, $this->_format) && in_array('ARRAY', $this->_format[$key])) {
-			$this->_data[$key] = json_encode($value);
-		}else{
-			$check_result = true;
-			if(array_key_exists($key, $this->_format)) {
-				foreach($this->_format[$key] as $filter) {
-					$check_result = $this->_check($value, $filter);
-					if($check_result === false) break;
-				}
-			}
-			if($check_result) {
-			}else{
-				if($this->_throw_exception) {
-					throw new Exception();
-				}
+		$this->_data[$key] = $value;
+	}
+
+	/**
+	 * __callオーバーロード
+	 * 
+	 */
+	public function __call($name, $arguments) {
+		if(preg_match('/^get[A-Z]/', $name))
+		{
+			$colum = Util::convert_snake_case(substr($name, 3)).'_id';
+			if(array_key_exists($colum, $this->_data))
+			{
+                $model_name = explode('_', $colum); // source, user. id
+                $model_name = $model_name[count($model_name)-2]; // user
+                
+                $model_name = Util::untableize($model_name).'Model'; // UserModel
+				return $model_name::find_by_id($this->_data[$colum]);
 			}
 		}
 	}
+
 	/**
 	 * __getオーバーロード
 	 * データからキーを取得
@@ -78,17 +86,10 @@ class Type {
 	 * @param string $key 取得するキー
 	 */
 	public function __get($key) {
-		if(array_key_exists($key.'_id', $this->_data)) {
-			$model_name = Util::untableize($key).'Model';
-			return $model_name::find_by_id($this->_data[$key.'_id']);
-		}
-		
 		if(!array_key_exists($key, $this->_data)) {
 			return NULL;
 		}
-		// if(array_key_exists($key, $this->_format) && in_array('ARRAY', $this->_format[$key])) {
-		// 	return json_decode($this->_data[$key], true);
-		// }
+
 		if(is_array($this->_properties) && array_key_exists($key, $this->_properties) && array_key_exists('type', $this->_properties[$key])) {
 			switch ($this->_properties[$key]['type']) {
 				case 'int':
@@ -97,36 +98,6 @@ class Type {
 			}
 		}
 		return $this->_data[$key];
-	}
-	
-	/**
-	 * 正規性を確認
-	 * 
-	 * @param mixed $value チェックする値
-	 * @param string $filter チェックするフィルタ,/^.+$/とすると正規表現フィルタが利用可能
-	 */
-	private function _check($value, $filter) {
-		if(preg_match('/^\/(.+)\/[A-z]+$/', $filter, $maches)) {
-			return preg_match($maches[1], $value) == 1;
-		}
-		if($filter == 'NUMRIC') {
-			return preg_match('/^[0-9]+$/', $value) == 1;
-		}
-		if($filter == 'MAIL') {
-			return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
-		}
-		if(strpos($filter, 'LENGTH_MIN:') === 0) {
-			$length = substr($filter, strlen('LENGTH_MIN:'));
-			return mb_strlen($value) >= $length;
-		}
-		if(strpos($filter, 'LENGTH_MAX:') === 0) {
-			$length = substr($filter, strlen('LENGTH_MAX:'));
-			return mb_strlen($value) <= $length;
-		}
-		return true;
-	}
-	public function setName($name) {
-		$this->_name = $name;
 	}
 
 	/* 行データ */
