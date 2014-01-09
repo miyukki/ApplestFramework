@@ -66,4 +66,27 @@ class Util {
 		}
 		return $plural;
 	}
+	public static function get_mysql_type($value) {
+		if(is_numeric($value) && strlen($value) == 1)
+		{
+			return 'tinyint(1)';
+		}
+
+		if(is_numeric($value))
+		{
+			return 'int(11)';
+		}
+
+		if(strlen($value) < 65535)
+		{
+			return 'text';
+		}
+
+		if(strlen($value) < 16777215)
+		{
+			return 'mediumtext';
+		}
+
+		return 'longtext';
+	}
 }

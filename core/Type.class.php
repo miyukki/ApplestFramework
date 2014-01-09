@@ -163,27 +163,49 @@ class Type {
 	}
 
 	public function hibernate() {
+		// ハイバネートの有効化チェック
 		if(!$this->_enable_hibernate)
 		{
 			return;
 		}
 
+		// モデルからテーブルカラム情報を取得
 		$model_name = $this->_name . 'Model';
-		$columns = $model_name::getTableColumns();
+		$define_columns = $model_name::getTableColumns();
 		$undefine_columns = array();
 
-		foreach ($this->_data as $key => $value) {
-			if(!array_key_exists($key, $columns)) {
+		$ignore_columns = array('id', 'created_at', 'updated_at', 'deleted_at');
+
+		foreach ($this->_data as $key => $value)
+		{
+			// 型が違うか定義されてないカラムをリストアップ
+			if(!array_key_exists($key, $define_columns) ||
+				!in_array($key, $ignore_columns) && $define_columns[$key] !== Util::get_mysql_type($value))
+			{
 				array_push($undefine_columns, $key);
 			}
 		}
 
-		if(count($undefine_columns) !== 0) {
-			foreach ($undefine_columns as $colum) {
-				MySQL::getInstance()->exec(sprintf('ALTER TABLE %s ADD %s %s',
-															Util::tableize($this->_name), $colum, 'text'), array(), true);
-			}
+		if(count($undefine_columns) === 0)
+		{
+			return;
 		}
+
+		foreach ($undefine_columns as $colum)
+		{
+			// 定義されているカラムは変更、されてなければ新しく定義
+			if(array_key_exists($colum, $define_columns))
+			{
+				MySQL::getInstance()->exec(sprintf('ALTER TABLE %s MODIFY COLUMN %s %s', Util::tableize($this->_name), $colum, Util::get_mysql_type($value)), array(), true);			
+			}
+			else
+			{
+				MySQL::getInstance()->exec(sprintf('ALTER TABLE %s ADD %s %s', Util::tableize($this->_name), $colum, Util::get_mysql_type($value)), array(), true);			
+			}
+			$define_columns[$colum] = Util::get_mysql_type($value);
+		}
+
+		$model_name::setTableColumns($define_columns);
 	}
 
 	public function save($table = null) {
