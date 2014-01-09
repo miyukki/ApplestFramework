@@ -70,10 +70,16 @@ class Type {
 			$colum = Util::convert_snake_case(substr($name, 3)).'_id';
 			if(array_key_exists($colum, $this->_data))
 			{
-                $model_name = explode('_', $colum); // source, user. id
-                $model_name = $model_name[count($model_name)-2]; // user
-                
-                $model_name = Util::untableize($model_name).'Model'; // UserModel
+				if(isset($arguments[0])) {
+					$model_name = $arguments[0];
+				}
+				else
+				{
+                	$model_name = explode('_', $colum); // source, user. id
+                	$model_name = $model_name[count($model_name)-2]; // user
+                	
+                	$model_name = Util::untableize($model_name).'Model'; // UserModel
+				}
 				return $model_name::find_by_id($this->_data[$colum]);
 			}
 		}

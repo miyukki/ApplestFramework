@@ -40,8 +40,20 @@ class TestController extends Controller {
 
 		
 		// Test::is(UserModel::find_by_id($user2_id)->name, 'Mike', 'Util::is_hash() test1');
-		// $needle1 = TestModel::create();
-		// $needle2 = TestModel::create();
+		$needle1 = TestModel::create();
+		$needle2 = TestModel::create();
+
+		$needle3 = TestUserModel::create();
+		$needle3->name = "John";
+		$needle3_id = $needle3->save();
+
+		$needle1->save();
+
+		$needle2->test_user_id = $needle3_id;
+		$needle2->save();
+
+		$user = $needle2->getTestUser('TestUserModel');
+		Test::is($user->name, 'John', 'Type#getFoo()');
 
 
 		if(Test::is_fail()) {
