@@ -5,6 +5,8 @@ return array(
 
 	'salt'    => 'tRaV!S_C1',
 
+	'log_level' => Log::VERBOSE,
+
 	'path'    => array(
 		'type'       => dirname(__FILE__).'/type',
 		'logic'      => dirname(__FILE__).'/logic',

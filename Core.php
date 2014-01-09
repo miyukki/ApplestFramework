@@ -58,7 +58,7 @@ class ApplestFramework {
 	public static function autoloader($class) {
 		if(!preg_match("/^_?[A-z0-9]+$/",$class)) return;
 		if(Util::ends_with($class, 'Model')) {
-			eval("class $class extends Model { static \$_name = '$class';}");
+			eval("class $class extends Model { protected static \$instance = null; }");
 		}
 		if(Util::ends_with($class, 'Type')) {
 			$type_file = Config::get('path.type').'/'.$class.'.class.php';
@@ -109,6 +109,11 @@ class ApplestFramework {
 		}else{
 			error_reporting(0);
 			ini_set('display_errors', 0);
+		}
+
+		// ログ設定
+		if(!is_null(Config::get('log_level'))) {
+			Log::level(Config::get('log_level'));
 		}
 
 		// URL正規化
