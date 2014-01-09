@@ -12,9 +12,12 @@
  */
 class Type {
 	private $_name;
-	private $_data;
-	private $_format;
+	
+	private $_data = array();
+
 	private $_throw_exception = true;
+
+	protected $_enable_hibernate = true;
 
 	protected $_properties = array();
 	private $_default_properties = array(
@@ -31,31 +34,15 @@ class Type {
 			'type' => 'int',
 		),
 	);
+
 	protected $_output_keys = array();
 	
 	public function __construct($data = null) {
 		$this->_properties = array_merge($this->_default_properties, $this->_properties);
-		// $this->_properties = $this->_default_properties+$this->_properties;
-		// var_dump($this->_properties);
-		// タイプフォーマットの取得
-		// $formats = $this->getFormat();
-		// $this->_format = array();
-		// タイプフォーマットからデータ値の初期設定とフォーマット保存
-		// 20131004 初期値なしへ
-		// foreach($formats as $key => $format) {
-			// $this->_data[$key] = $format[0];
-			// $this->_format[$key] = $format[1];
-		// }
-		$this->_data = array();
-		$this->_format = $this->getFormat();
-		// var_dump($this->getFormat());
+
 		// データが有る場合はデータを代入
-		if(!is_null($data)) {
-			/*
-			foreach($data as $data_key => $data_value) {
-				$this->$data_key = $data_value;
-			}
-			*/
+		if(!is_null($data))
+		{
 			$this->_data = $data;
 		}
 	}
@@ -138,9 +125,6 @@ class Type {
 		}
 		return true;
 	}
-	protected function getFormat() {
-		return array();
-	}
 	public function setName($name) {
 		$this->_name = $name;
 	}
@@ -178,7 +162,33 @@ class Type {
 		}
 	}
 
+	public function hibernate() {
+		if(!$this->_enable_hibernate)
+		{
+			return;
+		}
+
+		$model_name = $this->_name . 'Model';
+		$columns = $model_name::getTableColumns();
+		$undefine_columns = array();
+
+		foreach ($this->_data as $key => $value) {
+			if(!array_key_exists($key, $columns)) {
+				array_push($undefine_columns, $key);
+			}
+		}
+
+		if(count($undefine_columns) !== 0) {
+			foreach ($undefine_columns as $colum) {
+				MySQL::getInstance()->exec(sprintf('ALTER TABLE %s ADD %s %s',
+															Util::tableize($this->_name), $colum, 'text'), array(), true);
+			}
+		}
+	}
+
 	public function save($table = null) {
+		$this->hibernate();
+
 		$table = !is_null($table)?$table:Util::tableize($this->_name);
 		$data = $this->_data;
 		if(array_key_exists('id', $data) && $data['id'] !== 0) {

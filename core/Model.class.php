@@ -34,6 +34,34 @@ class Model {
         return static::$instance;
     }
 
+    private $table_columns = array();
+    private function __construct() {
+    	MySQL::getInstance()->exec(sprintf('CREATE TABLE IF NOT EXISTS `%s` (
+												`id` int(11) NOT NULL AUTO_INCREMENT,
+												`created_at` int(11) NOT NULL,
+												`updated_at` int(11) NOT NULL,
+												`deleted_at` int(11) NOT NULL,
+												PRIMARY KEY (`id`)
+												) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8',
+											$this->getTableizeName()), array(), true);
+
+    	// カラムデータを取得
+    	$columns = MySQL::getInstance()->exec('SHOW COLUMNS FROM ' . $this->getTableizeName(), array(), true);
+
+    	// $this->table_columnsに代入
+    	foreach ($columns as $column) {
+    		$this->table_columns[$column['Field']] = $column['Type'];
+    	}
+    }
+
+    public static function getTableColumns() {
+    	return static::getInstance()->table_columns;
+    }
+
+    public static function setTableColumns($columns) {
+    	return static::getInstance()->table_columns = $columns;
+    }
+
     private function getModelName() {
 		$called_class = get_called_class();
 		return substr($called_class, 0, -strlen('Model'));
