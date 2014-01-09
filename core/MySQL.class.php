@@ -32,8 +32,8 @@ class MySQL {
 
 	public function exec($query, $arrval = array(), $returndata = false, $returnlastid = false) {
 		// var_dump($query, $arrval);
-		Log::verbose('MySQL Query:  'var_export($query, true));
-		Log::verbose('MySQL Values: 'var_export($arrval, true));
+		Log::verbose('MySQL Query:  '.var_export($query, true));
+		Log::verbose('MySQL Values: '.var_export($arrval, true));
 		$stmt = $this->pdo->prepare($query);
 		$q = $stmt->execute($arrval);
 		if(!$q) {
