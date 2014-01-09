@@ -1,9 +1,9 @@
 ApplestFramework
 ================
 
-![travis-ci status](https://secure.travis-ci.org/toriimiyukki/ApplestFramework.png)
+[![Build Status](https://travis-ci.org/toriimiyukki/ApplestFramework.png?branch=develop)](https://travis-ci.org/toriimiyukki/ApplestFramework)
 
-PHP Framework for myself
+A PHP Framework for myself
 
 This framework is released under the MIT Lisence.
 
