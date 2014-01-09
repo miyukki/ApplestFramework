@@ -58,7 +58,7 @@ class ApplestFramework {
 	public static function autoloader($class) {
 		if(!preg_match("/^_?[A-z0-9]+$/",$class)) return;
 		if(Util::ends_with($class, 'Model')) {
-			eval("class $class extends Model { static \$_name = '$class';}");
+			eval("class $class extends Model { protected static \$instance = null; }");
 		}
 		if(Util::ends_with($class, 'Type')) {
 			$type_file = Config::get('path.type').'/'.$class.'.class.php';

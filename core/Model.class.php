@@ -25,62 +25,105 @@
 // :lock    データベースにロック
 
 class Model {
-	static public function getName() {
-		return substr(static::$_name, 0, -5);
+	protected static $instance = null;
+
+    protected static function getInstance() {
+        if (is_null(static::$instance)) {
+            static::$instance = new static;
+        }
+        return static::$instance;
+    }
+
+    private function getModelName() {
+		$called_class = get_called_class();
+		return substr($called_class, 0, -strlen('Model'));
+    }
+
+    private function getTableizeName() {
+		return Util::tableize($this->getModelName());
+    }
+
+
+	public static function create() {
+		return static::getInstance()->_create();
 	}
-	static public function create() {
-		$type_name = self::getName().'Type';
+
+	private function _create() {
+		$type_name = $this->getTableizeName().'Type';
 		$type = new $type_name();
-		$type->setName(self::getName());
+		$type->setName($this->getModelName());
 		$id = $type->save();
-		$type = static::find_by_id($id);
+		// $type = static::find_by_id($id);
 		return $type;
 	}
+
+
 	static public function __callStatic($name, $arguments) {
 		if(strpos($name, 'find_by_') === 0) {
 			$colum = substr($name, strlen('find_by_'));
-			return self::find("*", array('condition' => array($colum => $arguments[0]), 'only' => true));
+			return static::find("*", array('condition' => array($colum => $arguments[0]), 'only' => true));
 		}
 		if(strpos($name, 'find_or_create_by_') === 0) {
 			$colum = substr($name, strlen('find_or_create_by_'));
-			$row = self::find("*", array('condition' => array($colum => $arguments[0]), 'only' => true));
+			$row = static::find("*", array('condition' => array($colum => $arguments[0]), 'only' => true));
 			if(is_null($row)) {
-				$row = self::create();
-				$row->$colum = $arguments[0];
+				$row = static::create();
+				// $row->$colum = $arguments[0];
 			}
 			return $row;
 		}
 	}
-	static public function find($columns = '*', $options = array()) {
-		if(isset($options['only'])) $options['limit'] = 1;
-		$t_name = isset($options['from'])?$options['from']:Util::tableize(self::getName());
-		$query = 'SELECT '.$columns.' FROM '.$t_name.' ';
+
+	public static function find($columns = '*', $options = array()) {
+		return static::getInstance()->_find($columns , $options);
+	}
+
+	private function _find($columns, $options) {
+		// only属性が付いている場合
+		if(isset($options['only']))
+		{
+			$options['limit'] = 1;	
+		}
+
+		$table_name = $this->getTableizeName();
+		if(isset($options['from']))
+		{
+			$table_name = $options['from'];
+		}
+
+		$query = sprintf('SELECT %s FROM %s', $columns, $table_name);
 		$query_values = array();
 
 		/* left join */
-		if(isset($options['left_join'])) {
-			$query .= ' LEFT JOIN '.Util::tableize($options['left_join'][0]).' ON '.Util::tableize($options['left_join'][0]).'.'.$options['left_join'][1].'='.Util::tableize(self::getName()).'.'.$options['left_join'][2];
+		if(isset($options['left_join']))
+		{
+			$query .= sprintf(' LEFT JOIN %s ON %s.%s = %s.%s ',
+									Util::tableize($options['left_join'][0]),
+									Util::tableize($options['left_join'][0]), $options['left_join'][1],
+									$this->getTableizeName(), $options['left_join'][2]);
 			// problem
-			if(isset($options['left_where'])) {
+			if(isset($options['left_where']))
+			{
 				$query .= ' AND '.Util::tableize($options['left_join'][0]).'.'.$options['left_where'];
 			}
 		}
 
 		/* condition */
-		if(isset($options['condition'])) {
+		if(isset($options['condition']))
+		{
 			$query .= ' WHERE ';
 			if(!is_array($options['condition'])) {
 				$query .= $options['condition'];
 				if(!isset($options['rescure'])) {
-					$query .= ' AND '.Util::tableize(self::getName()).'.deleted_at = 0';
+					$query .= ' AND '.$this->getTableizeName().'.deleted_at = 0';
 				}
 			}else if(Util::is_hash($options['condition'])) {
 				foreach($options['condition'] as $key => $value) {
-					$query .= sprintf('`%s`.`%s` = ? AND', Util::tableize(self::getName()), $key);
+					$query .= sprintf('`%s`.`%s` = ? AND', $this->getTableizeName(), $key);
 					$query_values[] = $value;
 				}
 				if(!isset($options['rescure'])) {
-					$query .= ' '.Util::tableize(self::getName()).'.deleted_at = 0';
+					$query .= ' '.$this->getTableizeName().'.deleted_at = 0';
 				} else {
 					$query = substr($query, 0, -3);
 				}
@@ -90,7 +133,7 @@ class Model {
 				$where_query = array_shift($where);
 				
 				if(!isset($options['rescure'])) {
-					$where_query .= ' AND '.Util::tableize(self::getName()).'.deleted_at = 0';
+					$where_query .= ' AND '.$this->getTableizeName().'.deleted_at = 0';
 				}
 				$query .= $where_query;
 				foreach($where as $value) {
@@ -99,26 +142,40 @@ class Model {
 			}
 		}else{
 			if(!isset($options['rescure'])) {
-				$query .= ' WHERE '.Util::tableize(self::getName()).'.deleted_at = 0';
+				$query .= ' WHERE '.$this->getTableizeName().'.deleted_at = 0';
 			}
 		}
 
 		/* group */
-		if(isset($options['group'])) $query .= " GROUP BY ".$options['group'];
+		if(isset($options['group']))
+		{
+			$query .= " GROUP BY ".$options['group'];
+		}
 
 		/* order */
-		if(isset($options['order'])) $query .= " ORDER BY ".$options['order'];
+		if(isset($options['order']))
+		{
+			$query .= " ORDER BY ".$options['order'];
+		}
 
 		/* limit & offset */
-		if(isset($options['limit'])) $query .= " LIMIT ".$options['limit'];
-		if(isset($options['offset'])) $query .= " OFFSET ".$options['offset'];
+		if(isset($options['limit']))
+		{
+			$query .= " LIMIT ".$options['limit'];
+		}
+
+		if(isset($options['offset']))
+		{
+			$query .= " OFFSET ".$options['offset'];
+		}
+
 		$db = MySQL::getInstance();
 
 		$ret = array();
 		foreach ($db->exec($query, $query_values, true) as $data) {
-			$type = self::getName().'Type';
-			$type = new $type($data);
-			$type->setName(self::getName());
+			$type_name = $this->getTableizeName().'Type';
+			$type = new $type_name($data);
+			$type->setName($this->getModelName());
 			$ret[] = $type;
 		}
 		if(isset($options['only'])) {
@@ -128,9 +185,6 @@ class Model {
 			if(isset($options['array'])) {
 				return $ret[0]->getData();
 			}
-			// if(isset($options['public_array'])) {
-			// 	return $ret[0]->getPublicData();
-			// }
 			return $ret[0];
 		}
 		if(isset($options['array'])) {
@@ -140,13 +194,7 @@ class Model {
 			}
 			return $ret2;
 		}
-		// if(isset($options['public_array'])) {
-		// 	$ret2 = array();
-		// 	foreach ($ret as $type) {
-		// 		$ret2[] = $type->getPublicData();
-		// 	}
-		// 	return $ret2;
-		// }
+
 		return $ret;
 	}
 }
