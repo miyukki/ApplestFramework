@@ -4,51 +4,61 @@
  * MySQLクラス
  * pdoを利用しMySQLを前提とした関数を提供
  *
- * @packege MiyukkiFramework
- * @author miyukki<toriimiyukki@gmail.com>
- * @since PHP 5.3
- * @version $id$
+ * @packege ApplestFramework
+ * @author Yusei Yamanaka<info@applest.net>
  */
 class MySQL {
-	var $pdo;
 
 	private static $instance = null;
 
 	private function __construct() {}
-
 	public static function getInstance() {
-		if (is_null(self::$instance)) {
+		if (is_null(self::$instance))
+		{
 			self::$instance = new self;
 		}
 		return self::$instance;
 	}
 
+	private $pdo;
+
 	public function connect($source, $user, $password, $charset = 'utf8') {
 		$this->pdo = new PDO($source, $user, $password);
-		if($charset) {
+		if($charset)
+		{
 			$this->pdo->query("SET NAMES $charset");
 		}
 	}
 
-	public function exec($query, $arrval = array(), $returndata = false, $returnlastid = false) {
-		// var_dump($query, $arrval);
+	public function exec($query, $arrval = array(), $get_data = false, $get_last_id = false) {
 		Log::verbose('MySQL Query:  '.var_export($query, true));
 		Log::verbose('MySQL Values: '.var_export($arrval, true));
+
 		$stmt = $this->pdo->prepare($query);
-		$q = $stmt->execute($arrval);
-		if(!$q) {
-			if(Config::get('debug', false)) {
-				var_dump($query, $arrval);
-				var_dump($this->pdo->errorInfo());
-				throw new Exception('SQL command is not ended.');
-			}
+		$result = $stmt->execute($arrval);
+
+		if(!$result && Config::get('debug', false))
+		{
+			var_dump($query, $arrval);
+			var_dump($this->pdo->errorInfo());
+			throw new Exception('SQL command is not ended.');
 		}
-		if($returnlastid) return $this->pdo->lastInsertId();
-		if(!$returndata) return $stmt;
-		$dat = array();
-		while($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-			$dat[] = $data;
+
+		if($get_last_id)
+		{
+			return $this->pdo->lastInsertId();
 		}
-		return $dat;
+
+		if($get_data === false)
+		{
+			return $stmt;
+		}
+
+		$returndata = array();
+		while($data = $stmt->fetch(PDO::FETCH_ASSOC))
+		{
+			$returndata[] = $data;
+		}
+		return $returndata;
 	}
 }
