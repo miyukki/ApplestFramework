@@ -32,6 +32,7 @@ class MySQL {
 
 	public function exec($query, $arrval = array(), $returndata = false, $returnlastid = false) {
 		// var_dump($query, $arrval);
+		// Log::debug()
 		$stmt = $this->pdo->prepare($query);
 		$q = $stmt->execute($arrval);
 		if(!$q) {
