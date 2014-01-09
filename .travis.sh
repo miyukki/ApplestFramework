@@ -16,4 +16,8 @@ mysql travis_test -e 'CREATE TABLE `users` (\
 
 php test/Test.php
 
-exit $?
+RESULT=$?
+
+cat log/*
+
+exit RESULT
