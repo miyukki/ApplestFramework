@@ -141,7 +141,7 @@ class Type {
 
 	public function hibernate() {
 		// ハイバネートの有効化チェック
-		if(!$this->_enable_hibernate)
+		if(!$this->_enable_hibernate || !Config::get('hibernate', true))
 		{
 			return;
 		}

@@ -172,7 +172,7 @@ class ApplestFramework {
 		// ターゲットが静的なファイルだった場合
 		if($route->type === Route::T_FILE) {
 			if(file_exists(Config::get('path.public').'/'.$route->file_path)) {
-				View::show(Config::get('path.public').'/'.$route->file_path, null);
+				echo file_get_contents(Config::get('path.public').'/'.$route->file_path);
 			}else{
 				throw new Exception("Does not exists static file.");
 			}
@@ -181,7 +181,7 @@ class ApplestFramework {
 
 		if($route->type === Route::T_TEMPLATE) {
 			if(file_exists(Config::get('path.template').'/'.$route->file_path)) {
-				View::show(Config::get('path.template').'/'.$route->file_path, null);
+				View::template($route->file_path, null);
 			}else{
 				throw new Exception("Does not exists template file.");
 			}

@@ -77,7 +77,7 @@ class Model {
 	}
 
 	private function _create() {
-		$type_name = $this->getTableizeName().'Type';
+		$type_name = $this->getModelName().'Type';
 		$type = new $type_name();
 		$type->setName($this->getModelName());
 		$id = $type->save();
@@ -201,7 +201,7 @@ class Model {
 
 		$ret = array();
 		foreach ($db->exec($query, $query_values, true) as $data) {
-			$type_name = $this->getTableizeName().'Type';
+			$type_name = $this->getModelName().'Type';
 			$type = new $type_name($data);
 			$type->setName($this->getModelName());
 			$ret[] = $type;
