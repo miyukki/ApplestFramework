@@ -63,7 +63,7 @@ class Log {
 	}
 
 	private static function write($log_level, $label, $log_text) {
-		self::$logs[] = array($log_level, sprintf('[%s] %s %s', $label, date('Y:m:d H:i:s'), $log_text));
+		self::$logs[] = array($log_level, sprintf('[%s] %s %s', $label, date('Y/m/d H:i:s'), $log_text));
 	}
 
 	public static function finalize() {
