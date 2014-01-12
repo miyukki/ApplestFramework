@@ -4,15 +4,14 @@
  * Type
  *
  * DBのカラムをデータとして持ち,値の正規判定もする
- * 
- * @packege MiyukkiFramework
+ *
+ * @package ApplestFramework
  * @author miyukki<toriimiyukki@gmail.com>
  * @since PHP 5.3
- * @version $id$
  */
 class Type {
 	private $_name;
-	
+
 	private $_data = array();
 
 	private $_throw_exception = true;

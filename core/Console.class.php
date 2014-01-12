@@ -1,7 +1,7 @@
 <?php
 
 class Console {
-	const NOMAL = 0;
+	const NORMAL = 0;
 	const BOLD = 1;
 	const UNDERLINE = 4;
 	const BLINK = 5;
