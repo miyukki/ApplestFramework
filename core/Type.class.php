@@ -35,10 +35,14 @@ class Type {
 		),
 	);
 
+	protected function getProperty() {
+		return array();
+	}
+
 	protected $_output_keys = array();
 	
 	public function __construct($data = null) {
-		$this->_properties = array_merge($this->_default_properties, $this->_properties);
+		$this->_properties = array_merge($this->_default_properties, $this->_properties, $this->getProperty());
 
 		// データが有る場合はデータを代入
 		if(!is_null($data))
