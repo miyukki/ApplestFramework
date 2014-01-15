@@ -150,7 +150,7 @@ class ApplestFramework {
 			if(Config::get('debug', false)) {
 				throw $e;
 			}else{
-				// View::show(Config::get('path.public').'/'.$last_target, null);
+				View::api(array('message' => $e->getMessage()), false);
 			}
 		}
 	}
