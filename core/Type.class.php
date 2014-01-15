@@ -171,9 +171,9 @@ class Type {
 				$define_columns[$column] = $new_type;
 				$alter_flag = true;
 			}
-			else if(!in_array($column, $ignore_columns) && $define_columns[$key] !== self::get_mysql_type($value, $define_columns[$key]))
+			else if(!in_array($column, $ignore_columns) && $define_columns[$column] !== self::get_mysql_type($value, $define_columns[$column]))
 			{
-				$new_type = self::get_mysql_type($value, $define_columns[$key]);
+				$new_type = self::get_mysql_type($value, $define_columns[$column]);
 				MySQL::getInstance()->exec(
 										sprintf('ALTER TABLE %s MODIFY COLUMN %s %s',
 											Util::tableize($this->_name),
@@ -193,7 +193,7 @@ class Type {
 	private function validate() {
 		$errors = array();
 		foreach ($this->_data as $column => $value) {
-			if(array_key_exists($key, $this->_properties) && array_key_exists('validation', $this->_properties[$key])) {
+			if(array_key_exists($key, $this->_properties) && array_key_exists('validation', $this->_properties[$column])) {
 				$validation = $this->_properties[$key]['validation'];
 				$validation->validate($value);
 				$errors = array_merge($errors, $validation->getErrorMessages());
