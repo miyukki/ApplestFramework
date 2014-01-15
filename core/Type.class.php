@@ -193,8 +193,8 @@ class Type {
 	private function validate() {
 		$errors = array();
 		foreach ($this->_data as $column => $value) {
-			if(array_key_exists($key, $this->_properties) && array_key_exists('validation', $this->_properties[$column])) {
-				$validation = $this->_properties[$key]['validation'];
+			if(array_key_exists($column, $this->_properties) && array_key_exists('validation', $this->_properties[$column])) {
+				$validation = $this->_properties[$column]['validation'];
 				$validation->validate($value);
 				$errors = array_merge($errors, $validation->getErrorMessages());
 			}
@@ -214,7 +214,10 @@ class Type {
 
 	public function save($table = null) {
 		$this->hibernate();
-		$this->validate();
+
+		if(!$this->validate()) {
+			return;
+		}
 
 		$table = !is_null($table)?$table:Util::tableize($this->_name);
 		$data = $this->_data;
