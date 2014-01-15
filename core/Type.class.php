@@ -233,14 +233,17 @@ class Type {
 		}
 	}
 
-	const MYSQL_TYPE_NULL       = 0;
+	const MYSQL_TYPE_UNDEFINED  = 0;
 	const MYSQL_TYPE_TINYINT    = 1;
 	const MYSQL_TYPE_INT        = 2;
 	const MYSQL_TYPE_TEXT       = 3;
 	const MYSQL_TYPE_MEDIUMTEXT = 4;
 	const MYSQL_TYPE_LONGTEXT   = 5;
 	private static function get_mysql_type($value, $type_text = null) {
-		$type = self::MYSQL_TYPE_NULL;
+		$type = null;
+		if (is_null($type_text)) {
+			$type = self::MYSQL_TYPE_UNDEFINED;
+		}
 		if ($type_text == 'tinyint(1)') {
 			$type = self::MYSQL_TYPE_TINYINT;
 		}
@@ -256,6 +259,9 @@ class Type {
 		if ($type_text == 'longtext') {
 			$type = self::MYSQL_TYPE_LONGTEXT;
 		}
+		if (is_null($type)) {
+			return $type_text;
+		}
 
 		if ($type <= self::MYSQL_TYPE_TINYINT && is_numeric($value) && strlen($value) == 1) {
 			return 'tinyint(1)';
@@ -269,7 +275,8 @@ class Type {
 		if ($type <= self::MYSQL_TYPE_MEDIUMTEXT && strlen($value) < 16777215) {
 			return 'mediumtext';
 		}
-
-		return 'longtext';
+		if ($type <= self::MYSQL_TYPE_LONGTEXT) {
+			return 'longtext';
+		}
 	}
 }
