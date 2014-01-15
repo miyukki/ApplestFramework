@@ -239,7 +239,7 @@ class Type {
 	const MYSQL_TYPE_TEXT       = 3;
 	const MYSQL_TYPE_MEDIUMTEXT = 4;
 	const MYSQL_TYPE_LONGTEXT   = 5;
-	private static function get_mysql_type($value, $type_text) {
+	private static function get_mysql_type($value, $type_text = null) {
 		$type = self::MYSQL_TYPE_NULL;
 		if ($type_text == 'tinyint(1)') {
 			$type = self::MYSQL_TYPE_TINYINT;
