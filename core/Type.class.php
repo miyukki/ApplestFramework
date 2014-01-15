@@ -74,10 +74,10 @@ class Type {
 				}
 				else
 				{
-                	$model_name = explode('_', $colum); // source, user. id
-                	$model_name = $model_name[count($model_name)-2]; // user
-                	
-                	$model_name = Util::untableize($model_name).'Model'; // UserModel
+					$model_name = explode('_', $colum); // source, user. id
+					$model_name = $model_name[count($model_name)-2]; // user
+
+					$model_name = Util::untableize($model_name).'Model'; // UserModel
 				}
 				return $model_name::find_by_id($this->_data[$colum]);
 			}

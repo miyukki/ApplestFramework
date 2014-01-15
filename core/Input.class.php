@@ -21,13 +21,13 @@ class Input {
 	protected static $php_input = null;
 	protected static $put_param = null;
 	protected static function hydrate(){
-	    if (Input::method() == 'PUT' or Input::method() == 'PATCH' or Input::method() == 'DELETE') {
-            static::$php_input === null and static::$php_input = file_get_contents('php://input');
-            parse_str(static::$php_input, static::$put_param);
-	    } else {
-            static::$put_param = array();
-	    }
-    }
+		if (Input::method() == 'PUT' or Input::method() == 'PATCH' or Input::method() == 'DELETE') {
+			static::$php_input === null and static::$php_input = file_get_contents('php://input');
+			parse_str(static::$php_input, static::$put_param);
+		} else {
+			static::$put_param = array();
+		}
+	}
 	public static function put($key = null, $default = null) {
 		static::$put_param === null and static::hydrate();
 		// var_dump(static::$put_param);
@@ -70,7 +70,7 @@ class Input {
 			}
 		}
 
-		if(count($files) == 0) { 
+		if(count($files) == 0) {
 			return $default;
 		}
 		if(count($files) == 1 || $only) {
