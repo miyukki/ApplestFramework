@@ -164,7 +164,7 @@ class Type {
 												$column,
 												$new_type)
 										, array(), true);
-				$define_columns[$colum] = $new_type;
+				$define_columns[$column] = $new_type;
 				$alter_flag = true;
 			}
 			else if(!in_array($column, $ignore_columns) && $define_columns[$key] !== self::get_mysql_type($value, $define_columns[$key]))
@@ -173,10 +173,10 @@ class Type {
 				MySQL::getInstance()->exec(
 										sprintf('ALTER TABLE %s MODIFY COLUMN %s %s',
 											Util::tableize($this->_name),
-											$colum,
+											$column,
 											$new_type)
 										, array(), true);			
-				$define_columns[$colum] = $new_type;
+				$define_columns[$column] = $new_type;
 				$alter_flag = true;
 			}
 		}
