@@ -28,9 +28,13 @@ class Validation {
 	}
 
 	public function getErrorMessages() {
-		if(!$this->results) {
-			throw new Exception("ばりでーとして", 1);
+		$errors = array();
+		foreach ($this->results as $rule => $result) {
+			if($result !== true) {
+				array_push($errors, $result);
+			}
 		}
+		return $errors;
 	}
 
 	public function validate($subject) {
@@ -113,15 +117,11 @@ class Validation {
 				case 'max_number':
 					$this->results[$rule] = Validator::max_number($subject, $args[0]);
 					break;
-
-
-				default:
-					$this->results[$rule] = false;
-					break;
 			}
 
 			if($is_valid && $this->results[$rule] === false) {
 				$is_valid = false;
+				$this->results[$rule] = array_pop($args);
 			}
 		}
 

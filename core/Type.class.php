@@ -186,8 +186,31 @@ class Type {
 		}
 	}
 
+	private function validate() {
+		$errors = array();
+		foreach ($this->_data as $column => $value) {
+			if(array_key_exists($key, $this->_properties) && array_key_exists('validation', $this->_properties[$key])) {
+				$validation = $this->_properties[$key]['validation'];
+				$validation->validate($value);
+				$errors = array_merge($errors, $validation->getErrorMessages());
+			}
+		}
+
+
+		if (count($errors) !== 0 && $this->_throw_exception) {
+			throw new Exception(implode($errors, PHP_EOL));
+		}
+
+		if (count($errors) !== 0) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public function save($table = null) {
 		$this->hibernate();
+		$this->validate();
 
 		$table = !is_null($table)?$table:Util::tableize($this->_name);
 		$data = $this->_data;
