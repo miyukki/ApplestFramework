@@ -146,42 +146,44 @@ class Type {
 		}
 
 		// モデルからテーブルカラム情報を取得
+		$alter_flag = false;
 		$model_name = $this->_name . 'Model';
 		$define_columns = $model_name::getTableColumns();
-		$undefine_columns = array();
 
 		$ignore_columns = array('id', 'created_at', 'updated_at', 'deleted_at');
 
-		foreach ($this->_data as $key => $value)
+		foreach ($this->_data as $column => $value)
 		{
 			// 型が違うか定義されてないカラムをリストアップ
-			if(!array_key_exists($key, $define_columns) ||
-				!in_array($key, $ignore_columns) && $define_columns[$key] !== Util::get_mysql_type($value))
+			if(!array_key_exists($column, $define_columns))
 			{
-				array_push($undefine_columns, $key);
+				$new_type = self::get_mysql_type($value);
+				MySQL::getInstance()->exec(
+										sprintf('ALTER TABLE %s ADD %s %s',
+												Util::tableize($this->_name),
+												$column,
+												$new_type)
+										, array(), true);
+				$define_columns[$colum] = $new_type;
+				$alter_flag = true;
+			}
+			else if(!in_array($column, $ignore_columns) && $define_columns[$key] !== self::get_mysql_type($value, $define_columns[$key]))
+			{
+				$new_type = self::get_mysql_type($value, $define_columns[$key]);
+				MySQL::getInstance()->exec(
+										sprintf('ALTER TABLE %s MODIFY COLUMN %s %s',
+											Util::tableize($this->_name),
+											$colum,
+											$new_type)
+										, array(), true);			
+				$define_columns[$colum] = $new_type;
+				$alter_flag = true;
 			}
 		}
-
-		if(count($undefine_columns) === 0)
-		{
-			return;
+		
+		if ($alter_flag) {
+			$model_name::setTableColumns($define_columns);
 		}
-
-		foreach ($undefine_columns as $colum)
-		{
-			// 定義されているカラムは変更、されてなければ新しく定義
-			if(array_key_exists($colum, $define_columns))
-			{
-				MySQL::getInstance()->exec(sprintf('ALTER TABLE %s MODIFY COLUMN %s %s', Util::tableize($this->_name), $colum, Util::get_mysql_type($value)), array(), true);			
-			}
-			else
-			{
-				MySQL::getInstance()->exec(sprintf('ALTER TABLE %s ADD %s %s', Util::tableize($this->_name), $colum, Util::get_mysql_type($value)), array(), true);			
-			}
-			$define_columns[$colum] = Util::get_mysql_type($value);
-		}
-
-		$model_name::setTableColumns($define_columns);
 	}
 
 	public function save($table = null) {
@@ -229,5 +231,45 @@ class Type {
 			$this->_data['id'] = $id;
 			return $id;
 		}
+	}
+
+	const MYSQL_TYPE_NULL       = 0;
+	const MYSQL_TYPE_TINYINT    = 1;
+	const MYSQL_TYPE_INT        = 2;
+	const MYSQL_TYPE_TEXT       = 3;
+	const MYSQL_TYPE_MEDIUMTEXT = 4;
+	const MYSQL_TYPE_LONGTEXT   = 5;
+	private static function get_mysql_type($value, $type_text) {
+		$type = self::MYSQL_TYPE_NULL;
+		if ($type_text == 'tinyint(1)') {
+			$type = self::MYSQL_TYPE_TINYINT;
+		}
+		if ($type_text == 'int(11)') {
+			$type = self::MYSQL_TYPE_INT;
+		}
+		if ($type_text == 'text') {
+			$type = self::MYSQL_TYPE_TEXT;
+		}
+		if ($type_text == 'mediumtext') {
+			$type = self::MYSQL_TYPE_MEDIUMTEXT;
+		}
+		if ($type_text == 'longtext') {
+			$type = self::MYSQL_TYPE_LONGTEXT;
+		}
+
+		if ($type <= self::MYSQL_TYPE_TINYINT && is_numeric($value) && strlen($value) == 1) {
+			return 'tinyint(1)';
+		}
+		if ($type <= self::MYSQL_TYPE_INT && is_numeric($value)) {
+			return 'int(11)';
+		}
+		if ($type <= self::MYSQL_TYPE_TEXT && strlen($value) < 65535) {
+			return 'text';
+		}
+		if ($type <= self::MYSQL_TYPE_MEDIUMTEXT && strlen($value) < 16777215) {
+			return 'mediumtext';
+		}
+
+		return 'longtext';
 	}
 }
