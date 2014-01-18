@@ -147,10 +147,9 @@ class ApplestFramework {
 		try {
 			$this->dispatchActionThrowableException($controller_name);
 		} catch (Exception $e) {
+			Log::error("Exception occurred: ".$e->getMessage());
 			if(Config::get('debug', false)) {
 				throw $e;
-			}else{
-				View::api(array('message' => $e->getMessage()), false);
 			}
 		}
 	}
@@ -224,10 +223,19 @@ class ApplestFramework {
 		}
 
 		// メイン
-		if(method_exists($controller, $route->controller_method)) {
+		$controller_ref = new ReflectionClass($controller);
+		if(method_exists($controller, $route->controller_method) && $controller_ref->getParentClass()->name === 'APIController') {
+			try {
+				$method = $route->controller_method;
+				$result = $controller->$method();
+				View::api($result);
+			} catch (Exception $e) {
+				View::api(array('message' => $e->getMessage()), false);
+			}
+		}else if(method_exists($controller, $route->controller_method)) {
 			$method = $route->controller_method;
 			$controller->$method();
-		}elseif(method_exists($controller, 'exec')) {
+		}else if(method_exists($controller, 'exec')) {
 			$controller->exec();
 		}else{
 			throw new Exception("There is no method that can be run.", 1);

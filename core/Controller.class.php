@@ -15,3 +15,6 @@ class Controller {
 		require_once(Config::get('path.logic').'/'.$logic_name.'.class.php');
 	}
 }
+class APIController extends Controller {
+	
+}
