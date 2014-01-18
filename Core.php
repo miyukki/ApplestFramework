@@ -217,34 +217,38 @@ class ApplestFramework {
 			}
 		}
 
-		// コントローラーファイルの実行前関数
-		if(method_exists($controller, 'before')) {
-			$controller->before();
-		}
-
 		// メイン
 		$controller_ref = new ReflectionClass($controller);
 		if(method_exists($controller, $route->controller_method) && $controller_ref->getParentClass()->name === 'APIController') {
 			try {
+				$controller->before();
+
 				$method = $route->controller_method;
 				$result = $controller->$method();
+
+				$controller->after();
 				View::api($result);
 			} catch (Exception $e) {
 				View::api(array('message' => $e->getMessage()), false);
 			}
 		}else if(method_exists($controller, $route->controller_method)) {
-			$method = $route->controller_method;
-			$controller->$method();
+			try {
+				$controller->before();
+
+				$method = $route->controller_method;
+				$controller->$method();
+
+				$controller->after();
+			} catch (Exception $e) {
+				throw $e;
+			}
 		}else if(method_exists($controller, 'exec')) {
 			$controller->exec();
 		}else{
 			throw new Exception("There is no method that can be run.", 1);
 		}
 
-		// コントローラーファイルの実行後関数
-		if(method_exists($controller, 'after')) {
-			$controller->after();
-		}
+
 
 		// _AfterAction
 		$after_action = Config::get('path.action').'/_AfterAction.class.php';
