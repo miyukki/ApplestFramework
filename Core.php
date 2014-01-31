@@ -22,7 +22,7 @@ define('BASE_DIR', dirname(__FILE__));
 define('ROUTE_FILE', BASE_DIR.'/Route.php');
 define('ENVIRONMENT_DIR', BASE_DIR.'/environment');
 
-$core_classes = array('View', 'Event', 'Vendor', 'Redis', 'Session', 'Hash', 'Validation', 'Validator', 'Model', 'Type', 'MySQL', 'Util', 'Input', 'Response', 'Cookie', 'Config', 'Route', 'Router', 'Environment', 'Logic', 'Controller', 'Log', 'Test', 'Console');
+$core_classes = array('View', 'Event', 'Vendor', 'Redis', 'Session', 'Hash', 'Validation', 'Validator', 'Model', 'Type', 'MySQL', 'Util', 'Input', 'Response', 'Cookie', 'Config', 'Route', 'Router', 'Environment', 'Logic', 'Controller', 'Log', 'Test', 'Console', 'Exception');
 foreach ($core_classes as $class) {
 	require(BASE_DIR.'/core/'.$class.'.class.php');
 }
@@ -228,8 +228,11 @@ class ApplestFramework {
 
 				$controller->after();
 				View::api($result);
-			} catch (Exception $e) {
+			} catch (Error $e) {
+				Response::statusCode($e->getStatusCode());
 				View::api(array('message' => $e->getMessage()), false);
+			} catch (Exception $e) {
+				throw $e;
 			}
 		}else if(method_exists($controller, $route->controller_method)) {
 			try {
@@ -239,6 +242,9 @@ class ApplestFramework {
 				$controller->$method();
 
 				$controller->after();
+			} catch (Error $e) {
+				Response::statusCode($e->getStatusCode());
+				echo $e->getMessage();
 			} catch (Exception $e) {
 				throw $e;
 			}
