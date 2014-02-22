@@ -18,6 +18,13 @@ class Type {
 
 	protected $_enable_hibernate = true;
 
+
+	/*
+	 * セッション内での二重問い合わせ防止用のキャッシュ
+	 * join問い合わせなどで使用
+	 */
+	protected $_object_cache = array();
+
 	protected $_properties = array();
 
 	private $_default_properties = array(
@@ -74,6 +81,7 @@ class Type {
 	 * もうすぐ無くなる予定
 	 */
 	public function __call($name, $arguments) {
+		// DEPRECATED
 		if(preg_match('/^get[A-Z]/', $name))
 		{
 			$colum = Util::convert_snake_case(substr($name, 3)).'_id';
@@ -102,14 +110,17 @@ class Type {
 	 */
 	public function __get($key) {
 		if(array_key_exists($key, $this->_properties) && array_key_exists('join', $this->_properties[$key])) {
-			// ex. id
-			$join_key = $this->_properties[$key]['join'];
-			// ex. find_by_id
-			$model_method = 'find_by_'.$join_key;
-			// ex. UserType => UserModel
-			$model_name = substr($this->_properties[$key]['type'], 0, -4).'Model';
-			// ex. UserModel::find_by_id( $this->user_id )
-			return $model_name::$model_method($this->_data[$key . '_' . $join_key]);
+			if(!array_key_exists($key, $this->_object_cache)) {
+				// ex. id
+				$join_key = $this->_properties[$key]['join'];
+				// ex. find_by_id
+				$model_method = 'find_by_'.$join_key;
+				// ex. UserType => UserModel
+				$model_name = substr($this->_properties[$key]['type'], 0, -4).'Model';
+				// ex. UserModel::find_by_id( $this->user_id )
+				$this->_object_cache[$key] = $model_name::$model_method($this->_data[$key . '_' . $join_key]);
+			}
+			return $this->_object_cache[$key];
 		}
 
 		if(!array_key_exists($key, $this->_data)) {
