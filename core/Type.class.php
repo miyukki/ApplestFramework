@@ -61,6 +61,9 @@ class Type {
 	public function setName($name) {
 		$this->_name = $name;
 	}
+	public function getName() {
+		return $this->_name;
+	}
 
 	/**
 	 * __setマジックメソッド
@@ -68,9 +71,18 @@ class Type {
 	 * 値のバリデーションは後で
 	 */
 	public function __set($key, $value) {
+		// get type
 		if(array_key_exists($key, $this->_properties) && array_key_exists('join', $this->_properties[$key])) {
 			$join_key = $this->_properties[$key]['join'];
 			$this->_data[$key . '_' . $join_key] = $value->$join_key;
+			// object cache
+ 			$this->_object_cache[$key] = $value;
+			return;
+		}
+		// get array
+		// ここで配列を保存してしまうとsaveが呼ばれていないにもかかわらずトランザクションが発生するのでここではキャッシュにいれてsave時に保存する
+		if(array_key_exists($key, $this->_properties) && array_key_exists('type', $this->_properties[$key]) && $this->_properties[$key]['type'] === 'array') {
+			$this->_object_cache[$key] = $value;
 			return;
 		}
 		$this->_data[$key] = $value;
@@ -109,6 +121,7 @@ class Type {
 	 * @param string $key 取得するキー
 	 */
 	public function __get($key) {
+		// get type
 		if(array_key_exists($key, $this->_properties) && array_key_exists('join', $this->_properties[$key])) {
 			if(!array_key_exists($key, $this->_object_cache)) {
 				// ex. id
@@ -119,6 +132,13 @@ class Type {
 				$model_name = substr($this->_properties[$key]['type'], 0, -4).'Model';
 				// ex. UserModel::find_by_id( $this->user_id )
 				$this->_object_cache[$key] = $model_name::$model_method($this->_data[$key . '_' . $join_key]);
+			}
+			return $this->_object_cache[$key];
+		}
+		// get array
+		if(array_key_exists($key, $this->_properties) && array_key_exists('type', $this->_properties[$key]) && $this->_properties[$key]['type'] === 'array') {
+			if(!array_key_exists($key, $this->_object_cache)) {
+				$this->_object_cache[$key] = $this->getArrayObject($this->id, $key);
 			}
 			return $this->_object_cache[$key];
 		}
@@ -251,6 +271,13 @@ class Type {
 			return;
 		}
 
+		// set array
+		foreach ($this->_properties as $property_key => $property_value) {
+			if(array_key_exists('type', $property_value) && $property_value['type'] === 'array') {
+				$this->setArrayObject($this->id, $property_key, $this->_object_cache[$property_key]);
+			}
+		}
+
 		$table = !is_null($table)?$table:Util::tableize($this->_name);
 		$data = $this->_data;
 		if(array_key_exists('id', $data) && $data['id'] !== 0) {
@@ -293,6 +320,48 @@ class Type {
 			$this->_data['id'] = $id;
 			return $id;
 		}
+	}
+
+
+	/*
+	 * 配列を格納するときのやつ
+	 */
+	protected function getArrayTableName($key) {
+		return sprintf('_%s_%s', Util::convert_snake_case($this->getName()), $key);
+	}
+
+	protected function getArrayObject($id, $key) {
+		$array_object = array();
+		$result = MySQL::getInstance()->exec(sprintf('SELECT * FROM %s WHERE id = ?',
+											$this->getArrayTableName($key)), array($id), true);
+		foreach ($result as $row) {
+			$array_object[$row['key']] = $row['value'];
+		}
+		$array_object = array_reverse($array_object);
+		return $array_object;
+	}
+
+	protected function setArrayObject($id, $key, $array_object) {
+		// UNSAFE! valie and key support only text object!
+		MySQL::getInstance()->exec(sprintf('CREATE TABLE IF NOT EXISTS `%s` (
+												`id` bigint(20) NOT NULL,
+												`key` text NOT NULL,
+												`value` text NOT NULL
+												) ENGINE=MyISAM DEFAULT CHARSET=utf8',
+											$this->getArrayTableName($key)), array(), true);
+		MySQL::getInstance()->exec(sprintf('DELETE FROM `%s` WHERE `id` = ?',
+											$this->getArrayTableName($key)), array($id), true);
+
+		$query_strs = array();
+		$query_values = array();
+		foreach ($array_object as $array_key => $array_value) {
+			$query_strs[] = '(?, ?, ?)';
+			$query_values[] = $id;
+			$query_values[] = $array_key;
+			$query_values[] = $array_value;
+		}
+		MySQL::getInstance()->exec(sprintf('INSERT INTO `%s`(`id`, `key`, `value`) VALUES%s',
+											$this->getArrayTableName($key), implode($query_strs, ',')), $query_values, true);
 	}
 
 	const MYSQL_TYPE_UNDEFINED  = 0;
