@@ -56,16 +56,22 @@ class Type {
 	}
 
 	/**
-	 * __setオーバーロード
-	 * データにキーと値を代入,その際に正規性を確認
+	 * __setマジックメソッド
+	 * データにキーと値を代入
+	 * 値のバリデーションは後で
 	 */
 	public function __set($key, $value) {
+		if(array_key_exists($key, $this->_properties) && array_key_exists('join', $this->_properties[$key])) {
+			$join_key = $this->_properties[$key]['join'];
+			$this->_data[$key . '_' . $join_key] = $value->$join_key;
+			return;
+		}
 		$this->_data[$key] = $value;
 	}
 
 	/**
-	 * __callオーバーロード
-	 * 
+	 * __callマジックメソッド
+	 * もうすぐ無くなる予定
 	 */
 	public function __call($name, $arguments) {
 		if(preg_match('/^get[A-Z]/', $name))
@@ -89,12 +95,23 @@ class Type {
 	}
 
 	/**
-	 * __getオーバーロード
+	 * __getマジックメソッド
 	 * データからキーを取得
 	 * 
 	 * @param string $key 取得するキー
 	 */
 	public function __get($key) {
+		if(array_key_exists($key, $this->_properties) && array_key_exists('join', $this->_properties[$key])) {
+			// ex. id
+			$join_key = $this->_properties[$key]['join'];
+			// ex. find_by_id
+			$model_method = 'find_by_'.$join_key;
+			// ex. UserType => UserModel
+			$model_name = substr($this->_properties[$key]['type'], 0, -4).'Model';
+			// ex. UserModel::find_by_id( $this->user_id )
+			return $model_name::$model_method($this->_data[$key . '_' . $join_key]);
+		}
+
 		if(!array_key_exists($key, $this->_data)) {
 			return NULL;
 		}
@@ -119,6 +136,10 @@ class Type {
 		foreach ($this->_data as $key => $value) {
 			if(in_array($key, $this->_output_keys)) {
 				$ret[$key] = $this->__get($key);
+				// Typeだったときの対処
+				if(is_a($ret[$key], 'Type')) {
+					$ret[$key]->output();
+				}
 			}
 		}
 		return $ret;
