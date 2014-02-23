@@ -37,7 +37,7 @@ class Router {
 			$regpath = preg_replace('/:[A-z0-9]+/', '[^/]+', $path);
 			$regpath = str_replace('/', '\/', $regpath);
 			// パスは文字が確定しているほど優先度が高い
-			if(preg_match('/^'.$regpath.'$/', Input::path()) === 1 && ($last_path === '' || substr_count($last_path, ':') > substr_count($path, ':'))) {
+			if(preg_match('/^'.$regpath.'\/?$/', Input::path()) === 1 && ($last_path === '' || substr_count($last_path, ':') > substr_count($path, ':'))) {
 				// T_METHOD の時でメソッドが一致したら続行
 				if($route->type === Route::T_METHOD) {
 					$last_path = $path;

@@ -96,7 +96,7 @@ class Model {
 			$row = static::find("*", array('condition' => array($colum => $arguments[0]), 'only' => true));
 			if(is_null($row)) {
 				$row = static::create();
-				// $row->$colum = $arguments[0];
+				$row->$colum = $arguments[0];
 			}
 			return $row;
 		}

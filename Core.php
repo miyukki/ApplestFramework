@@ -22,7 +22,7 @@ define('BASE_DIR', dirname(__FILE__));
 define('ROUTE_FILE', BASE_DIR.'/Route.php');
 define('ENVIRONMENT_DIR', BASE_DIR.'/environment');
 
-$core_classes = array('View', 'Event', 'Vendor', 'Redis', 'Session', 'Hash', 'Validation', 'Validator', 'Model', 'Type', 'MySQL', 'Util', 'Input', 'Response', 'Cookie', 'Config', 'Route', 'Router', 'Environment', 'Logic', 'Controller', 'Log', 'Test', 'Console');
+$core_classes = array('View', 'Event', 'Vendor', 'Redis', 'Session', 'Hash', 'Validation', 'Validator', 'Model', 'Type', 'MySQL', 'Util', 'Input', 'Response', 'Cookie', 'Config', 'Route', 'Router', 'Environment', 'Logic', 'Controller', 'Log', 'Test', 'Console', 'Exception');
 foreach ($core_classes as $class) {
 	require(BASE_DIR.'/core/'.$class.'.class.php');
 }
@@ -147,10 +147,9 @@ class ApplestFramework {
 		try {
 			$this->dispatchActionThrowableException($controller_name);
 		} catch (Exception $e) {
+			Log::error("Exception occurred: ".$e->getMessage());
 			if(Config::get('debug', false)) {
 				throw $e;
-			}else{
-				// View::show(Config::get('path.public').'/'.$last_target, null);
 			}
 		}
 	}
@@ -218,25 +217,44 @@ class ApplestFramework {
 			}
 		}
 
-		// コントローラーファイルの実行前関数
-		if(method_exists($controller, 'before')) {
-			$controller->before();
-		}
-
 		// メイン
-		if(method_exists($controller, $route->controller_method)) {
-			$method = $route->controller_method;
-			$controller->$method();
-		}elseif(method_exists($controller, 'exec')) {
+		$controller_ref = new ReflectionClass($controller);
+		if(method_exists($controller, $route->controller_method) && $controller_ref->getParentClass()->name === 'APIController') {
+			try {
+				$controller->before();
+
+				$method = $route->controller_method;
+				$result = $controller->$method();
+
+				$controller->after();
+				View::api($result);
+			} catch (Error $e) {
+				Response::statusCode($e->getStatusCode());
+				View::api(array('message' => $e->getMessage()), false);
+			} catch (Exception $e) {
+				throw $e;
+			}
+		}else if(method_exists($controller, $route->controller_method)) {
+			try {
+				$controller->before();
+
+				$method = $route->controller_method;
+				$controller->$method();
+
+				$controller->after();
+			} catch (Error $e) {
+				Response::statusCode($e->getStatusCode());
+				echo $e->getMessage();
+			} catch (Exception $e) {
+				throw $e;
+			}
+		}else if(method_exists($controller, 'exec')) {
 			$controller->exec();
 		}else{
 			throw new Exception("There is no method that can be run.", 1);
 		}
 
-		// コントローラーファイルの実行後関数
-		if(method_exists($controller, 'after')) {
-			$controller->after();
-		}
+
 
 		// _AfterAction
 		$after_action = Config::get('path.action').'/_AfterAction.class.php';
