@@ -37,11 +37,13 @@ class MySQL {
 		$stmt = $this->pdo->prepare($query);
 		$result = $stmt->execute($arrval);
 
-		if(!$result && Config::get('debug', false))
+		if($result === false)
 		{
-			var_dump($query, $arrval);
-			var_dump($this->pdo->errorInfo());
-			throw new Exception('SQL command is not ended.');
+			if(Config::get('debug', false)) {
+				var_dump($query, $arrval);
+				var_dump($this->pdo->errorInfo());
+			}
+			throw new Exception('Failed SQL Execute.');
 		}
 
 		if($get_last_id)
